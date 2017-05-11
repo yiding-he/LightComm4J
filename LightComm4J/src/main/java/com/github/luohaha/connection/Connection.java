@@ -1,8 +1,11 @@
 package com.github.luohaha.connection;
 
+import com.github.luohaha.context.Context;
+import com.github.luohaha.context.ContextBean;
+import com.github.luohaha.exception.ConnectionCloseException;
+
 import java.io.IOException;
 import java.net.SocketAddress;
-import java.net.SocketOption;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -12,178 +15,183 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import com.github.luohaha.context.Context;
-import com.github.luohaha.context.ContextBean;
-import com.github.luohaha.exception.ConnectionCloseException;
-
 public class Connection implements Conn {
-	private Context context;
-	private SocketChannel channel;
-	private Selector selector;
-	private BlockingQueue<ByteBuffer> readyToWrite = new LinkedBlockingQueue<>();
-	// write function could be call just once
-	private boolean onWriteCalled = false;
-	private boolean readyToClose = false;
 
-	public Connection(Context context, SocketChannel channel, Selector selector) {
-		super();
-		this.context = context;
-		this.channel = channel;
-		this.selector = selector;
-	}
+    private Context context;
 
-	public synchronized void write(byte[] data) throws ConnectionCloseException, ClosedChannelException {
-		if (readyToClose)
-			throw new ConnectionCloseException();
-		ContextBean bean = context.getChanToContextBean().get(channel);
-		ByteBuffer buffer = ByteBuffer.allocate(data.length + 4);
-		buffer.putInt(data.length);
-		buffer.put(data);
-		buffer.flip();
-		readyToWrite.add(buffer);
-		int ops = bean.getOps();
-		ops |= SelectionKey.OP_WRITE;
-		bean.setOps(ops);
-		this.channel.register(this.selector, ops);
-		this.selector.wakeup();
-	}
+    private SocketChannel channel;
 
-	/**
-	 * set close flag
-	 * 
-	 * @throws IOException
-	 */
-	public void close() throws IOException {
-		this.readyToClose = true;
-		if (this.readyToWrite.isEmpty()) {
-			doClose();
-		}
-	}
+    private Selector selector;
 
-	/**
-	 * close channel
-	 * 
-	 * @throws IOException
-	 */
-	public void doClose() throws IOException {
-		this.context.removeContextByChan(channel);
-		this.channel.close();
-	}
+    private BlockingQueue<ByteBuffer> readyToWrite = new LinkedBlockingQueue<>();
 
-	public BlockingQueue<ByteBuffer> getReadyToWrite() {
-		return readyToWrite;
-	}
+    // write function could be call just once
+    private boolean onWriteCalled = false;
 
-	public boolean isOnWriteCalled() {
-		return onWriteCalled;
-	}
+    private boolean readyToClose = false;
 
-	public void setOnWriteCalled(boolean onWriteCalled) {
-		this.onWriteCalled = onWriteCalled;
-	}
+    public Connection(Context context, SocketChannel channel, Selector selector) {
+        super();
+        this.context = context;
+        this.channel = channel;
+        this.selector = selector;
+    }
 
-	public boolean isReadyToClose() {
-		return readyToClose;
-	}
+    public synchronized void write(byte[] data) throws ConnectionCloseException, ClosedChannelException {
+        if (readyToClose)
+            throw new ConnectionCloseException();
+        ContextBean bean = context.getChannelContextMappings().get(channel);
+        ByteBuffer buffer = ByteBuffer.allocate(data.length + 4);
+        buffer.putInt(data.length);
+        buffer.put(data);
+        buffer.flip();
+        readyToWrite.add(buffer);
+        int ops = bean.getOps();
+        ops |= SelectionKey.OP_WRITE;
+        bean.setOps(ops);
+        this.channel.register(this.selector, ops);
+        this.selector.wakeup();
+    }
 
-	public void setReadyToClose(boolean readyToClose) {
-		this.readyToClose = readyToClose;
-	}
+    /**
+     * set close flag
+     *
+     * @throws IOException
+     */
+    public void close() throws IOException {
+        this.readyToClose = true;
+        if (this.readyToWrite.isEmpty()) {
+            doClose();
+        }
+    }
 
-	@Override
-	public SocketAddress getLocalAddress() throws IOException {
-		// TODO Auto-generated method stub
-		return this.channel.getLocalAddress();
-	}
+    /**
+     * close channel
+     *
+     * @throws IOException
+     */
+    public void doClose() throws IOException {
+        this.context.removeByChannel(channel);
+        this.channel.close();
+    }
 
-	@Override
-	public SocketAddress getRemoteAddress() throws IOException {
-		// TODO Auto-generated method stub
-		return this.channel.getRemoteAddress();
-	}
+    public BlockingQueue<ByteBuffer> getReadyToWrite() {
+        return readyToWrite;
+    }
 
-	/**
-	 * set send buffer's size
-	 */
-	public void setSendBuffer(int size) throws IOException {
-		this.channel.setOption(StandardSocketOptions.SO_SNDBUF, size);
-	}
+    public boolean isOnWriteCalled() {
+        return onWriteCalled;
+    }
 
-	/**
-	 * get send buffer' size
-	 * 
-	 * @return
-	 * @throws IOException
-	 */
-	public int getSendBuffer() throws IOException {
-		return this.channel.getOption(StandardSocketOptions.SO_SNDBUF);
-	}
+    public void setOnWriteCalled(boolean onWriteCalled) {
+        this.onWriteCalled = onWriteCalled;
+    }
 
-	/**
-	 * set recv buffer's size
-	 */
-	public void setRecvBuffer(int size) throws IOException {
-		this.channel.setOption(StandardSocketOptions.SO_RCVBUF, size);
-	}
+    public boolean isReadyToClose() {
+        return readyToClose;
+    }
 
-	/**
-	 * get recv buffer's size
-	 * 
-	 * @return
-	 * @throws IOException
-	 */
-	public int getRecvBuffer() throws IOException {
-		return this.channel.getOption(StandardSocketOptions.SO_RCVBUF);
-	}
+    public void setReadyToClose(boolean readyToClose) {
+        this.readyToClose = readyToClose;
+    }
 
-	/**
-	 * set keep alive
-	 */
-	public void setKeepAlive(boolean flag) throws IOException {
-		this.channel.setOption(StandardSocketOptions.SO_KEEPALIVE, flag);
-	}
+    @Override
+    public SocketAddress getLocalAddress() throws IOException {
+        return this.channel.getLocalAddress();
+    }
 
-	/**
-	 * get keep alive
-	 * 
-	 * @return
-	 * @throws IOException
-	 */
-	public boolean getKeepAlive() throws IOException {
-		return this.channel.getOption(StandardSocketOptions.SO_KEEPALIVE);
-	}
+    @Override
+    public SocketAddress getRemoteAddress() throws IOException {
+        return this.channel.getRemoteAddress();
+    }
 
-	/**
-	 * set reuse address
-	 */
-	public void setReUseAddr(boolean flag) throws IOException {
-		this.channel.setOption(StandardSocketOptions.SO_REUSEADDR, flag);
-	}
+    /**
+     * set send buffer's size
+     */
+    public void setSendBuffer(int size) throws IOException {
+        this.channel.setOption(StandardSocketOptions.SO_SNDBUF, size);
+    }
 
-	/**
-	 * get reuse address
-	 * 
-	 * @return
-	 * @throws IOException
-	 */
-	public boolean getReUseAddr() throws IOException {
-		return this.channel.getOption(StandardSocketOptions.SO_REUSEADDR);
-	}
+    /**
+     * get send buffer' size
+     *
+     * @return
+     *
+     * @throws IOException
+     */
+    public int getSendBuffer() throws IOException {
+        return this.channel.getOption(StandardSocketOptions.SO_SNDBUF);
+    }
 
-	/**
-	 * set no delay
-	 */
-	public void setNoDelay(boolean flag) throws IOException {
-		this.channel.setOption(StandardSocketOptions.TCP_NODELAY, flag);
-	}
+    /**
+     * set recv buffer's size
+     */
+    public void setRecvBuffer(int size) throws IOException {
+        this.channel.setOption(StandardSocketOptions.SO_RCVBUF, size);
+    }
 
-	/**
-	 * get no delay
-	 * 
-	 * @return
-	 * @throws IOException
-	 */
-	public boolean getNoDelay() throws IOException {
-		return this.channel.getOption(StandardSocketOptions.TCP_NODELAY);
-	}
+    /**
+     * get recv buffer's size
+     *
+     * @return
+     *
+     * @throws IOException
+     */
+    public int getRecvBuffer() throws IOException {
+        return this.channel.getOption(StandardSocketOptions.SO_RCVBUF);
+    }
+
+    /**
+     * set keep alive
+     */
+    public void setKeepAlive(boolean flag) throws IOException {
+        this.channel.setOption(StandardSocketOptions.SO_KEEPALIVE, flag);
+    }
+
+    /**
+     * get keep alive
+     *
+     * @return
+     *
+     * @throws IOException
+     */
+    public boolean getKeepAlive() throws IOException {
+        return this.channel.getOption(StandardSocketOptions.SO_KEEPALIVE);
+    }
+
+    /**
+     * set reuse address
+     */
+    public void setReUseAddr(boolean flag) throws IOException {
+        this.channel.setOption(StandardSocketOptions.SO_REUSEADDR, flag);
+    }
+
+    /**
+     * get reuse address
+     *
+     * @return
+     *
+     * @throws IOException
+     */
+    public boolean getReUseAddr() throws IOException {
+        return this.channel.getOption(StandardSocketOptions.SO_REUSEADDR);
+    }
+
+    /**
+     * set no delay
+     */
+    public void setNoDelay(boolean flag) throws IOException {
+        this.channel.setOption(StandardSocketOptions.TCP_NODELAY, flag);
+    }
+
+    /**
+     * get no delay
+     *
+     * @return
+     *
+     * @throws IOException
+     */
+    public boolean getNoDelay() throws IOException {
+        return this.channel.getOption(StandardSocketOptions.TCP_NODELAY);
+    }
 }

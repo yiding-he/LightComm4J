@@ -82,3 +82,7 @@ local.properties
  
 # PDT-specific
 .buildpath
+
+# idea
+.idea/
+*.iml

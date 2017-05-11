@@ -1,12 +1,11 @@
 package com.github.luohaha.chatroom;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
-
 import com.github.luohaha.connection.Conn;
 import com.github.luohaha.param.ServerParam;
 import com.github.luohaha.server.LightCommServer;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class ChatRoomServer {
 	public static void main(String[] args) {
@@ -76,7 +75,7 @@ public class ChatRoomServer {
 		LightCommServer server = new LightCommServer(param, 4);
 		try {
 			server.start();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

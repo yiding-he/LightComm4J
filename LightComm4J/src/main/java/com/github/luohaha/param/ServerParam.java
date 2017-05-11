@@ -2,77 +2,75 @@ package com.github.luohaha.param;
 
 import com.github.luohaha.inter.OnAccept;
 import com.github.luohaha.inter.OnAcceptError;
-import com.github.luohaha.inter.OnClose;
 import com.github.luohaha.inter.OnConnection;
-import com.github.luohaha.inter.OnRead;
-import com.github.luohaha.inter.OnWrite;
 
 public class ServerParam extends Param {
-	private String host;
-	private int port;
-	private int backlog = 32;
-	private OnAccept onAccept;
-	private OnAcceptError onAcceptError;
-	
-	public ServerParam(String host, int port) {
-		// TODO Auto-generated constructor stub
-		this.host = host;
-		this.port = port;
-	}
 
-	public int getBacklog() {
-		return backlog;
-	}
+    public static final int DEFAULT_BACKLOG = 32;
 
-	public void setBacklog(int backlog) {
-		this.backlog = backlog;
-	}
+    private String host;
 
+    private int port;
 
-	public void setOnAccept(OnAccept onAccept) {
-		this.onAccept = onAccept;
-	}
+    private int backlog = DEFAULT_BACKLOG;
 
-	public String getHost() {
-		return host;
-	}
+    private OnAccept onAccept;
 
-	public void setHost(String host) {
-		this.host = host;
-	}
+    private OnAcceptError onAcceptError;
 
-	public int getPort() {
-		return port;
-	}
+    public ServerParam(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
 
-	public void setPort(int port) {
-		this.port = port;
-	}
+    public int getBacklog() {
+        return backlog;
+    }
 
-	@Override
-	public OnAccept getOnAccept() {
-		// TODO Auto-generated method stub
-		return this.onAccept;
-	}
+    public void setBacklog(int backlog) {
+        this.backlog = backlog;
+    }
 
-	public OnAcceptError getOnAcceptError() {
-		return onAcceptError;
-	}
+    public void setOnAccept(OnAccept onAccept) {
+        this.onAccept = onAccept;
+    }
 
-	public void setOnAcceptError(OnAcceptError onAcceptError) {
-		this.onAcceptError = onAcceptError;
-	}
+    public String getHost() {
+        return host;
+    }
 
-	@Override
-	public OnConnection getOnConnection() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public void setHost(String host) {
+        this.host = host;
+    }
 
-	@Override
-	public boolean isServerParam() {
-		// TODO Auto-generated method stub
-		return true;
-	}
-	
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    @Override
+    public OnAccept getOnAccept() {
+        return this.onAccept;
+    }
+
+    public OnAcceptError getOnAcceptError() {
+        return onAcceptError;
+    }
+
+    public void setOnAcceptError(OnAcceptError onAcceptError) {
+        this.onAcceptError = onAcceptError;
+    }
+
+    @Override
+    public OnConnection getOnConnection() {
+        return null;
+    }
+
+    @Override
+    public boolean isServerParam() {
+        return true;
+    }
 }

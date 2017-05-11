@@ -1,25 +1,40 @@
 package com.github.luohaha.connection;
 
+import com.github.luohaha.exception.ConnectionCloseException;
+
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.ClosedChannelException;
 
-import com.github.luohaha.exception.ConnectionCloseException;
-
 public interface Conn {
-	public void write(byte[] data) throws ConnectionCloseException, ClosedChannelException;
-	public void close() throws IOException;
-	public void doClose() throws IOException;
-	public SocketAddress getLocalAddress() throws IOException;
-	public SocketAddress getRemoteAddress() throws IOException;
-	public void setSendBuffer(int size) throws IOException;
-	public void setRecvBuffer(int size) throws IOException;
-	public void setKeepAlive(boolean flag) throws IOException;
-	public void setReUseAddr(boolean flag) throws IOException;
-	public void setNoDelay(boolean flag) throws IOException;
-	public int getSendBuffer() throws IOException;
-	public int getRecvBuffer() throws IOException;
-	public boolean getKeepAlive() throws IOException;
-	public boolean getReUseAddr() throws IOException;
-	public boolean getNoDelay() throws IOException;
+
+    void write(byte[] data) throws ConnectionCloseException, ClosedChannelException;
+
+    void close() throws IOException;
+
+    void doClose() throws IOException;
+
+    SocketAddress getLocalAddress() throws IOException;
+
+    SocketAddress getRemoteAddress() throws IOException;
+
+    void setSendBuffer(int size) throws IOException;
+
+    void setRecvBuffer(int size) throws IOException;
+
+    void setKeepAlive(boolean flag) throws IOException;
+
+    void setReUseAddr(boolean flag) throws IOException;
+
+    void setNoDelay(boolean flag) throws IOException;
+
+    int getSendBuffer() throws IOException;
+
+    int getRecvBuffer() throws IOException;
+
+    boolean getKeepAlive() throws IOException;
+
+    boolean getReUseAddr() throws IOException;
+
+    boolean getNoDelay() throws IOException;
 }
